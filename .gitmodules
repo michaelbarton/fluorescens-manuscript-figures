@@ -1,0 +1,3 @@
+[submodule "data/genome"]
+	path = data/genome
+	url = git@github.com:michaelbarton/Pseudomonas-fluorescens-R124-genome.git
