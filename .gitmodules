@@ -4,3 +4,6 @@
 [submodule "data/reference"]
 	path = data/reference
 	url = gitosis@gitserve:reference-genomes.git
+[submodule "lib/r"]
+	path = lib/r
+	url = git@github.com:michaelbarton/common-r.git
