@@ -30,13 +30,13 @@ data$reference <- as.factor(find.replace(data$reference,
 
 base <- ggplot(data,aes(color=reference)) + theme_bw()
 
-p1 <- base + geom_segment(size = 6,aes(x = V1/1000000, xend = V2/1000000,
-  y = V3/1000000, yend = V4/1000000))
-p1 <- p1 + scale_y_continuous("R124 Genome Position (MBp)")
+p1 <- base + geom_segment(size = 6,aes(y = V1/1000000, yend = V2/1000000,
+  x = V3/1000000, xend = V4/1000000))
+p1 <- p1 + scale_y_continuous("Reference Genome Position (MBp)")
 p1 <- p1 + xlab(NULL)
 
-p2 <- base + geom_density(size = 1, adjust = 1/3, aes(x = (V2 + V1)/2000000))
-p2 <- p2 + scale_x_continuous("Reference Genome Position (MBp)")
+p2 <- base + geom_density(size = 1, adjust = 1/3, aes(x = (V4 + V3)/2000000))
+p2 <- p2 + scale_x_continuous("R124 Genome Position (MBp)")
 p2 <- p2 + scale_y_continuous("Density",breaks = c(0))
 
 legend <- p2 + opts(keep = "legend_box")
