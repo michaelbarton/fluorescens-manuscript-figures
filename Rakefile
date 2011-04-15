@@ -1,12 +1,19 @@
-
 task :env do
   require 'bio'
   TMP = "tmp"
 end
 
-task :tmp_dir => :env do
+task :scaffold do
+  Dir.chdir('data/genome/assembly') do
+    `scaffolder sequence genome.scaffold.yml draft.fna > assembly.fna`
+  end
+end
+
+task :tmp_dir => [:env,:scaffold] do
   FileUtils.rm_rf TMP if File.exists? TMP
   FileUtils.mkdir TMP
+
+  FileUtils.cp 'data/genome/assembly/assembly.fna', TMP
 
   files = Dir['data/reference/genomes/**/*.gb']
   files.each do |f|
