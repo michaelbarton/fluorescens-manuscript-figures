@@ -1,5 +1,5 @@
 desc "Calculates ortholog clusters"
-task :orthologs => [:database,:hmmer,:parse].map{|i| "orthologs:{i}"}
+task :orthologs => [:database,:hmmer,:parse,:cluster].map{|i| "orthologs:{i}"}
 namespace :orthologs do
 
   task :cluster => :env do
@@ -7,6 +7,7 @@ namespace :orthologs do
       `mcxload -abc network.csv -o graph.txt -write-tab labels.txt`
       `mcl graph.txt -o clusters.txt -use-tab labels.txt --force-connected=y`
       `clmformat -icl clusters.txt -imx graph.txt -dir . -dump cluster-scores.txt --dump-measures`
+      FileUtils.cp "clusters.txt","../data/orthologs/"
     end
   end
 
@@ -47,7 +48,7 @@ namespace :orthologs do
         end
       end
     end
-    File.open(File.join(TMP,"source.yml"),"w") do |out|
+    File.open("data/ortholog/key.yml","w") do |out|
       out.print YAML.dump(database)
     end
   end
