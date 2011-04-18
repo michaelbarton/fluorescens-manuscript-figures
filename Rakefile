@@ -1,14 +1,31 @@
 desc "Calculates ortholog clusters"
-task :orthologs => [:gene_database,:hmmer].map{|i| "orthologs:{i}"}
+task :orthologs => [:database,:hmmer,:parse].map{|i| "orthologs:{i}"}
 namespace :orthologs do
 
-  task :hmmer do
+  task :parse => :env do
+    Dir.chdir(TMP) do
+      File.open('network.csv','w') do |out|
+        File.open('short.tab','r').each do |line|
+          next if line[0,1] == '#'
+          tokens = line.split
+
+          a,b = tokens[0],tokens[2]
+          next if a == b
+          next if tokens[4].to_f > 1e-3 # Test for homology using e-value
+
+          out.puts [a,b].join(',')
+        end
+      end
+    end
+  end
+
+  task :hmmer => :env do
     Dir.chdir(TMP) do
       `phmmer --noali --cpu 4 --tblout hits.tab genes.faa genes.faa > phmmer.txt`
     end
   end
 
-  task :gene_database => :env do
+  task :database => :env do
     database = Array.new
 
     File.open(File.join(TMP,"genes.faa"),"w") do |out|
@@ -27,8 +44,6 @@ namespace :orthologs do
     end
   end
 end
-
-
 
 desc "Run genome alignments"
 task :alignments => [:cp_genomes,:nucmer].map{|i| "alignments:{i}"}
