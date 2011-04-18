@@ -2,6 +2,14 @@ desc "Calculates ortholog clusters"
 task :orthologs => [:database,:hmmer,:parse].map{|i| "orthologs:{i}"}
 namespace :orthologs do
 
+  task :cluster => :env do
+    Dir.chdir(TMP) do
+      `mcxload -abc network.csv -o graph.txt -write-tab labels.txt`
+      `mcl graph.txt -o clusters.txt -use-tab labels.txt --force-connected=y`
+      `clmformat -icl clusters.txt -imx graph.txt -dir . -dump cluster-scores.txt --dump-measures`
+    end
+  end
+
   task :parse => :env do
     Dir.chdir(TMP) do
       File.open('network.csv','w') do |out|
@@ -13,7 +21,7 @@ namespace :orthologs do
           next if a == b
           next if tokens[4].to_f > 1e-3 # Test for homology using e-value
 
-          out.puts [a,b].join(',')
+          out.puts [a,b].join(' ')
         end
       end
     end
