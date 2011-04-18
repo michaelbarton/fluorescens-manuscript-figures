@@ -14,18 +14,26 @@ task :alignments => [:env,:tmp_dir] do
   `cat #{TMP}/*.coords > data/alignment/nucmer.coords`
 end
 
+desc "Use phmmer to search all genes against each other"
+task :hmmer => [:env,:gene_database] do
+  Dir.chdir(TMP) do
+    `phmmer --noali --cpu 4 --tblout hits.tab genes.faa genes.faa > phmmer.txt`
+  end
+end
+
 # "Private" tasks
 
 task :gene_database => :env do
   database = Array.new
 
-  File.open(File.join(TMP,"genes.fna"),"w") do |out|
+  File.open(File.join(TMP,"genes.faa"),"w") do |out|
     Dir['data/reference/gene/**/*.fna'].each do |file|
     source = file.split('/')[-3,3].join('_').gsub(".fna","")
       Bio::FlatFile.auto(file).each do |gene|
-        gene.definition = database.count
+        protein = Bio::Sequence::NA.new(gene.seq).translate
+        out.puts protein.to_fasta(database.count)
+
         database << source
-        out.puts gene
       end
     end
   end
