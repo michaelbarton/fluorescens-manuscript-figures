@@ -14,9 +14,32 @@ task :alignments => [:env,:tmp_dir] do
   `cat #{TMP}/*.coords > data/alignment/nucmer.coords`
 end
 
+# "Private" tasks
+
+task :gene_database => :env do
+  database = Array.new
+
+  File.open(File.join(TMP,"genes.fna"),"w") do |out|
+    Dir['data/reference/gene/**/*.fna'].each do |file|
+    source = file.split('/')[-3,3].join('_').gsub(".fna","")
+      Bio::FlatFile.auto(file).each do |gene|
+        gene.definition = database.count
+        database << source
+        out.puts gene
+      end
+    end
+  end
+  File.open(File.join(TMP,"source.yml"),"w") do |out|
+    out.print YAML.dump(database)
+  end
+end
+
 task :env do
   require 'bio'
+  require 'yaml'
   TMP = "tmp"
+  FileUtils.rm_rf TMP if File.exists? TMP
+  FileUtils.mkdir TMP
 end
 
 task :scaffold do
@@ -26,9 +49,6 @@ task :scaffold do
 end
 
 task :tmp_dir => [:env,:scaffold] do
-  FileUtils.rm_rf TMP if File.exists? TMP
-  FileUtils.mkdir TMP
-
   files = Dir['data/reference/genomes/**/*.gb']
   files.each do |f|
     dna = Bio::FlatFile.auto(f).first.to_biosequence
