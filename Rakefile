@@ -1,5 +1,5 @@
 desc "Calculates ortholog clusters"
-task :orthologs => [:database,:hmmer,:parse,:cluster].map{|i| "orthologs:{i}"}
+task :orthologs => [:database,:hmmer,:parse,:cluster].map{|i| "orthologs:#{i}"}
 namespace :orthologs do
 
   task :cluster => :env do
@@ -38,20 +38,29 @@ namespace :orthologs do
     database = Array.new
 
     File.open(File.join(TMP,"genes.faa"),"w") do |out|
+
       Dir['data/reference/gene/**/*.fna'].each do |file|
       source = file.split('/')[-3,3].join('_').gsub(".fna","")
         Bio::FlatFile.auto(file).each do |gene|
           protein = Bio::Sequence::NA.new(gene.seq).translate
           out.puts protein.to_fasta(database.count)
-
           database << source
         end
       end
+
+      source = "R124"
+      Bio::FlatFile.auto("data/genome/annotation/genes.fna").each do |gene|
+        protein = Bio::Sequence::NA.new(gene.seq).translate
+        out.puts protein.to_fasta(database.count)
+        database << source
+      end
+
     end
-    File.open("data/ortholog/key.yml","w") do |out|
+    File.open("tmp/key.yml","w") do |out|
       out.print YAML.dump(database)
     end
   end
+
 end
 
 desc "Run genome alignments"
