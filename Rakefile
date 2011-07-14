@@ -1,4 +1,6 @@
 task :env do
+  require 'pp'
+
   @tmp    = "tmp"
   @genome =  "genome.fna"
 end
@@ -28,6 +30,21 @@ namespace :data do
     `sort #{@tmp}/*.coords -o data/alignment/nucmer.coords`
   end
 
+  desc "Calculate genome sizes"
+  #task :size => [:env,:tmp,'fasta:all'] do
+  task :size => [:env] do
+    require 'bio'
+
+    File.open('data/genome_size.csv','w') do |out|
+      out.puts %W|species source size| * ','
+      Dir['tmp/*.fna'].each do |file|
+        dna = Bio::FlatFile.auto(file).first.to_biosequence
+        source = dna.definition =~ /genome/ ? 'genome' : 'plasmid'
+        out.puts([dna.definition.split('_').first,source,dna.seq.length] * ',')
+      end
+    end
+  end
+
 end
 
 namespace :fasta do
@@ -51,7 +68,7 @@ namespace :fasta do
 
   task :scaffold => [:env,:tmp] do
     Dir.chdir('data/genome/assembly') do
-      `scaffolder sequence genome.scaffold.yml draft.fna > #{@tmp}/#{@genome}`
+      `scaffolder sequence genome.scaffold.yml draft.fna --definition="fluorescens_r124_genome" > #{@tmp}/#{@genome}`
     end
   end
 
