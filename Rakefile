@@ -31,18 +31,34 @@ namespace :data do
   end
 
   desc "Calculate genome sizes"
-  task :size => [:env,:tmp,'fasta:all'] do
+  task :size => [:env,:tmp,'fasta:scaffold'] do
     require 'bio'
+    require 'fastercsv'
 
-    File.open('data/genome_size.csv','w') do |out|
-      out.puts %W|species strain source size| * ','
-      Dir['tmp/*.fna'].each do |file|
-        dna = Bio::FlatFile.auto(file).first.to_biosequence
-        source  = dna.definition =~ /genome/ ? 'genome' : 'plasmid'
-        species = dna.definition.split('_')[0]
-        strain  = dna.definition.split('_')[1]
-        out.puts([species,strain,source,dna.seq.length] * ',')
-      end
+    files = Dir['data/reference/genomes/**/*.gb']
+    r124_genes = "data/genome/annotation/gene_list.csv"
+
+    data = files.map do |file|
+      datum = file.gsub('.gb','').split('/')[-3,3]
+      entry = Bio::FlatFile.auto(file).first
+      datum << entry.seq.length
+
+      count = 0
+      entry.each_gene{ count += 1}
+      datum << count
+    end
+
+    r124 = %w|fluorescens R124 genome|
+    r124 << Bio::FlatFile.auto('tmp/fluorescens_r124_genome.fna').first.seq.length
+    r124 << FCSV.open(r124_genes,:headers => true).inject(0) do |count,row|
+      count += 1 if row['Scaffold Name'] =~ /scaffold|contig00001/
+      count
+    end
+    data << r124
+
+    FasterCSV.open('data/genome_size.csv','w') do |out|
+      out << %w|Pseudomonas strain source genome_size gene_count|
+      data.each{|row| out << row}
     end
   end
 
