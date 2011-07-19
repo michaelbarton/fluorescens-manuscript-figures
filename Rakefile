@@ -70,24 +70,27 @@ namespace :orthologs do
   task :all => [:database,:hmmer,:parse,:cluster]
 
   task :database => [:env,:tmp] do
-    database = Array.new
+    require 'bio'
+    database = Hash.new{|h,k| h[k] = [] }
 
     File.open(File.join(@tmp,"genes.faa"),"w") do |out|
 
       Dir['data/reference/gene/**/*.fna'].each do |file|
       source = file.split('/')[-3,3].join('_').gsub(".fna","")
         Bio::FlatFile.auto(file).each do |gene|
+          name = gene.definition.split.first
           protein = Bio::Sequence::NA.new(gene.seq).translate
-          out.puts protein.to_fasta(database.count)
-          database << source
+          out.puts protein.to_fasta(name)
+          database[source] << name
         end
       end
 
       source = "R124"
       Bio::FlatFile.auto("data/genome/annotation/genes.fna").each do |gene|
+        name = gene.definition.split.first
         protein = Bio::Sequence::NA.new(gene.seq).translate
-        out.puts protein.to_fasta(database.count)
-        database << source
+        out.puts protein.to_fasta(name)
+        database[source] << name
       end
 
     end
@@ -98,7 +101,7 @@ namespace :orthologs do
 
   task :hmmer => [:env,:tmp] do
     Dir.chdir(@tmp) do
-      `phmmer --noali --cpu 4 --tblout hits.tab genes.faa genes.faa > phmmer.txt`
+      `phmmer --noali --cpu 7 --tblout hits.tab genes.faa genes.faa > phmmer.txt`
     end
   end
 
