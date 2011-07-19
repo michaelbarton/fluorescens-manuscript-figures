@@ -1,41 +1,52 @@
 #!/usr/bin/env Rscript
 
-library(seqinr)
 library(plyr)
 library(ggplot2)
 
-annotations <- read.csv('data/genome/annotation/gene_list.csv')
+sizes <- read.csv('data/genome_size.csv')
+sizes <- subset(sizes, source == "genome")
 
-plasmid <- grep('scaffold00008',annotations$Scaffold.Name)
-plasmid <- plasmid
+sizes$gene_count <- sizes$gene_count
+sizes$genome_size <- sizes$genome_size/1000
 
-genome <- union(grep('scaffold',annotations$Scaffold.Name),
-  grep('contig00001',annotations$Scaffold.Name))
-genome <- setdiff(genome, plasmid)
-
-genes    <- length(genome)
-assembly <- length(read.fasta(file = 'data/genome/assembly/assembly.fna')[[1]])
-
-files <- dir('data/reference/gene',pattern='*',recursive=TRUE)
-files <- files[grep('genome',files)]
-sizes <- adply(files,c(1),.parallel=T,function(x){
-  genes  <- paste('data/reference/gene',x,sep="/")
-  genome <- paste('data/reference/genomes/',(strsplit(x,'\\.')[[1]][1]),".gb",sep="")
-
-  data.frame(
-   genes  = length(read.fasta(file = genes, as.string = TRUE, seqtype = "DNA")),
-   genome = as.integer(strsplit(readLines(file(genome,"r"), 1),'\\s+')[[1]][3]),
-   Genome = "Pseudomonas"
-  )
+median_density <- with(subset(sizes,strain != "R124"),{
+  median(gene_count / genome_size)
 })
 
-sizes <- rbind(sizes,
-  data.frame(X1 = 0, genes = genes, genome=assembly,Genome="R124"))[,2:4]
+p <- ggplot(sizes,aes(y=gene_count,x=genome_size,colour=Pseudomonas))
 
-p <- ggplot(sizes,aes(y=genes/1000,x=genome/1000000,colour=Genome))
+# Add slope line
+p <- p + geom_abline(
+  intercept = 0,
+  slope     = median_density,
+  lty       = 2,
+  color     = "grey30",
+  size      = 1
+  )
+
+# Annotate with median gene density
+p <- p + geom_text(aes(
+    x      = 5200,
+    y      = 4500,
+    vjust  = 0,
+    hjust  = 0,
+    label  = paste("η= ",signif(median_density,digits=3),"Genes/KBp")),
+  colour = "grey30")
+
+# Plot size data
 p <- p + geom_point(size=10)
-p <- p + scale_y_continuous("Gene Count (000s)")
-p <- p + scale_x_continuous("Size (MBp)")
+
+# Highlight R124 genome
+p <- p + geom_text(aes(
+    x      = 6250,
+    y      = 5600,
+    vjust  = 1.5,
+    hjust  = -0.5,
+    label  = "R124"),
+  colour = "grey30")
+
+p <- p + scale_y_continuous("Gene Count")
+p <- p + scale_x_continuous("Genome Size (KBp)")
 p <- p + theme_bw()
 
 png('out/genome_size_vs_annotations.png',width=600)
