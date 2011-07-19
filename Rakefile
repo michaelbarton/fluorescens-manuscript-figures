@@ -90,3 +90,17 @@ namespace :fasta do
   end
 
 end
+
+namespace :plot do
+
+  task :all => [:genome_size,:genome_dot_plot]
+
+  task :genome_size => 'data:size' do
+    `Rscript plot/genome_size_vs_annotations.R > /dev/null`
+  end
+
+  task :genome_dot_plot => 'data:synteny' do
+    `Rscript plot/genome_dot_plot.R > /dev/null`
+  end
+
+end
