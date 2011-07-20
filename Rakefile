@@ -67,9 +67,9 @@ end
 namespace :orthologs do
 
   desc "Calculate ortholog clusters"
-  task :all => [:database,:hmmer,:parse,:cluster]
+  task :all => [:tmp,:database,:hmmer,:parse,:cluster]
 
-  task :database => [:env,:tmp] do
+  task :database => [:env] do
     require 'bio'
     database = Hash.new{|h,k| h[k] = [] }
 
@@ -94,21 +94,21 @@ namespace :orthologs do
       end
 
     end
-    File.open("#{@tmp}/key.yml","w") do |out|
+    File.open("data/orthologs/key.yml","w") do |out|
       out.print YAML.dump(database)
     end
   end
 
-  task :hmmer => [:env,:tmp] do
+  task :hmmer => [:env] do
     Dir.chdir(@tmp) do
       `phmmer --noali --cpu 7 --tblout hits.tab genes.faa genes.faa > phmmer.txt`
     end
   end
 
-  task :parse => [:env,:tmp] do
+  task :parse => [:env] do
     Dir.chdir(@tmp) do
       File.open('network.csv','w') do |out|
-        File.open('short.tab','r').each do |line|
+        File.open('hits.tab','r').each do |line|
           next if line[0,1] == '#'
           tokens = line.split
 
@@ -122,7 +122,7 @@ namespace :orthologs do
     end
   end
 
-  task :cluster => [:env,:tmp] do
+  task :cluster => [:env] do
     Dir.chdir(@tmp) do
       `mcxload -abc network.csv -o graph.txt -write-tab labels.txt`
       `mcl graph.txt -o clusters.txt -use-tab labels.txt --force-connected=y`
