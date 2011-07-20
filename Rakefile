@@ -133,15 +133,31 @@ namespace :orthologs do
 
   task :parse => [:env] do
     clusters = File.open(@tmp + '/clusters.txt').map{ |line| line.split }
-    all_genes = YAML.load(File.read('data/orthologs/key.yml')).values.flatten
+    species = YAML.load(File.read('data/orthologs/key.yml'))
 
-    (all_genes - clusters.flatten).each do |id|
+    (species.values.flatten - clusters.flatten).each do |id|
       clusters << [id]
     end
 
     File.open('data/orthologs/clusters.yml','w') do |out|
       out.puts YAML.dump(clusters)
     end
+
+    invert = Hash.new
+    species.each do |specie,genes|
+      genes.each do |gene|
+        invert[gene] = specie
+      end
+    end
+
+    species_clusters = clusters.map do |cluster|
+      cluster.map{|gene| invert[gene] }.uniq
+    end
+
+    File.open('data/orthologs/species_clusters.yml','w') do |out|
+      out.puts YAML.dump(species_clusters)
+    end
+
   end
 
 end
