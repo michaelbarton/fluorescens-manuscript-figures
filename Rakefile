@@ -67,7 +67,7 @@ end
 namespace :orthologs do
 
   desc "Calculate ortholog clusters"
-  task :all => [:tmp,:database,:hmmer,:parse,:cluster]
+  task :all => [:tmp,:database,:hmmer,:network,:cluster,:parse]
 
   task :database => [:env] do
     require 'bio'
@@ -105,7 +105,7 @@ namespace :orthologs do
     end
   end
 
-  task :parse => [:env] do
+  task :network => [:env] do
     Dir.chdir(@tmp) do
       File.open('network.csv','w') do |out|
         File.open('hits.tab','r').each do |line|
@@ -128,6 +128,19 @@ namespace :orthologs do
       `mcl graph.txt -o clusters.txt -use-tab labels.txt --force-connected=y`
       `clmformat -icl clusters.txt -imx graph.txt -dir . -dump cluster-scores.txt --dump-measures`
       FileUtils.cp "clusters.txt","../data/orthologs/"
+    end
+  end
+
+  task :parse => [:env] do
+    clusters = File.open(@tmp + '/clusters.txt').map{ |line| line.split }
+    all_genes = YAML.load(File.read('data/orthologs/key.yml')).values.flatten
+
+    (all_genes - clusters.flatten).each do |id|
+      clusters << [id]
+    end
+
+    File.open('data/orthologs/clusters.yml','w') do |out|
+      out.puts YAML.dump(clusters)
     end
   end
 
