@@ -64,6 +64,104 @@ namespace :data do
 
 end
 
+namespace :orthologs do
+
+  desc "Calculate ortholog clusters"
+  task :all => [:tmp,:database,:hmmer,:network,:cluster,:parse]
+
+  task :database => [:env] do
+    require 'bio'
+    database = Hash.new{|h,k| h[k] = [] }
+
+    File.open(File.join(@tmp,"genes.faa"),"w") do |out|
+
+      Dir['data/reference/gene/**/*.fna'].each do |file|
+      source = file.split('/')[-3,3].join('_').gsub(".fna","")
+        Bio::FlatFile.auto(file).each do |gene|
+          name = gene.definition.split.first
+          protein = Bio::Sequence::NA.new(gene.seq).translate
+          out.puts protein.to_fasta(name)
+          database[source] << name
+        end
+      end
+
+      source = "R124"
+      Bio::FlatFile.auto("data/genome/annotation/genes.fna").each do |gene|
+        name = gene.definition.split.first
+        protein = Bio::Sequence::NA.new(gene.seq).translate
+        out.puts protein.to_fasta(name)
+        database[source] << name
+      end
+
+    end
+    File.open("data/orthologs/key.yml","w") do |out|
+      out.print YAML.dump(database)
+    end
+  end
+
+  task :hmmer => [:env] do
+    Dir.chdir(@tmp) do
+      `phmmer --noali --cpu 7 --tblout hits.tab genes.faa genes.faa > phmmer.txt`
+    end
+  end
+
+  task :network => [:env] do
+    Dir.chdir(@tmp) do
+      File.open('network.csv','w') do |out|
+        File.open('hits.tab','r').each do |line|
+          next if line[0,1] == '#'
+          tokens = line.split
+
+          a,b = tokens[0],tokens[2]
+          next if a == b
+          next if tokens[4].to_f > 1e-3 # Test for homology using e-value
+
+          out.puts [a,b].join(' ')
+        end
+      end
+    end
+  end
+
+  task :cluster => [:env] do
+    Dir.chdir(@tmp) do
+      `mcxload -abc network.csv -o graph.txt -write-tab labels.txt`
+      `mcl graph.txt -o clusters.txt -use-tab labels.txt --force-connected=y`
+      `clmformat -icl clusters.txt -imx graph.txt -dir . -dump cluster-scores.txt --dump-measures`
+      FileUtils.cp "clusters.txt","../data/orthologs/"
+    end
+  end
+
+  task :parse => [:env] do
+    clusters = File.open(@tmp + '/clusters.txt').map{ |line| line.split }
+    species = YAML.load(File.read('data/orthologs/key.yml'))
+
+    (species.values.flatten - clusters.flatten).each do |id|
+      clusters << [id]
+    end
+
+    File.open('data/orthologs/clusters.yml','w') do |out|
+      out.puts YAML.dump(clusters)
+    end
+
+    invert = Hash.new
+    species.each do |specie,genes|
+      genes.each do |gene|
+        invert[gene] = specie
+      end
+    end
+
+    species_clusters = clusters.map do |cluster|
+      cluster.map{|gene| invert[gene] }.uniq
+    end
+
+    File.open('data/orthologs/species_clusters.yml','w') do |out|
+      out.puts YAML.dump(species_clusters)
+    end
+
+  end
+
+end
+
 namespace :fasta do
 
   task :all => [:reference,:scaffold]
