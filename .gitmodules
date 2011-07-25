@@ -3,7 +3,7 @@
 	url = git@github.com:michaelbarton/Pseudomonas-fluorescens-R124-genome.git
 [submodule "data/reference"]
 	path = data/reference
-	url = gitosis@gitserve:reference-genomes.git
+	url = ssh://git@michaelbarton.repositoryhosting.com/michaelbarton/pseudo-reference.git
 [submodule "lib/r"]
 	path = lib/r
 	url = git@github.com:michaelbarton/common-r.git
