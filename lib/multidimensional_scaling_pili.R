@@ -3,6 +3,7 @@
 library(reshape)
 library(ggplot2)
 library(vegan)
+library(yaml)
 
 log.score <- function(score){
   -1 *
@@ -25,21 +26,24 @@ create.plot.data <- function(scaling){
   )
 }
 
+generate.MDS <- function(score.matrix){
+  names     <- row.names(score.matrix)
+  distances <- dist(score.matrix)
+
+  # Adjust 0 values to very small value
+  # See https://stat.ethz.ch/pipermail/r-help/2006-April/103909.html
+  distances[distances == 0] <- 0.000001
+  s <- metaMDSiter(distances)$points
+
+  row.names(s) <- names
+  colnames(s)  <- c("x","y")
+  s
+}
+
 adjacency <- read.csv("data/pili/adjacency.csv")
 adjacency$score <- log.score(adjacency$score)
 
-distances <- dist(
-               create.matrix.from.adjacency(
-                 adjacency))
-
-# Adjust 0 values to very small value
-# See https://stat.ethz.ch/pipermail/r-help/2006-April/103909.html
-distances[distances == 0] <- 0.000001
-
-scaling <- metaMDSiter(distances)
-
-p <- ggplot(create.plot.data(scaling),aes(x=x,y=y))
-p <- p + geom_point()
-p <- p + theme_bw()
-p <- p + scale_x_continuous("First Scaling Dimension")
-p <- p + scale_y_continuous("Second Scaling Dimension")
+write.csv(file="data/pili/scaling.csv",
+  generate.MDS(
+    create.matrix.from.adjacency(
+      adjacency)))
