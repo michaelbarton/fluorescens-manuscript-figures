@@ -1,4 +1,5 @@
 task :env do
+  require 'fastercsv'
   require 'pp'
   require 'set'
   require 'bio'
@@ -161,6 +162,17 @@ namespace :pili do
       out.puts %w|query match score| * ','
       results.sort_by{|row| [row[:query],row[:match]]}.each do |row|
         out.puts [row[:query],row[:match],row[:score]] * ','
+      end
+    end
+  end
+
+  task :plot_data => :env do
+    names = YAML.load(File.read("data/pili/plasmid_pili_gene_ids.yml"))
+    File.open('data/pili/plot_data.csv','w') do |out|
+      out.puts %w|gene,x,y,name| * ','
+      FCSV.foreach("data/pili/scaling.csv",:headers => true) do |row|
+        row << (names[row[0]] || "")
+        out.puts row
       end
     end
   end
