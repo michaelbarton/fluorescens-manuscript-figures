@@ -67,37 +67,7 @@ end
 namespace :orthologs do
 
   desc "Calculate ortholog clusters"
-  task :all => [:tmp,:database,:hmmer,:network,:cluster,:parse]
-
-  task :database => [:env] do
-    require 'bio'
-    database = Hash.new{|h,k| h[k] = [] }
-
-    File.open(File.join(@tmp,"genes.faa"),"w") do |out|
-
-      Dir['data/reference/gene/**/*.fna'].each do |file|
-      source = file.split('/')[-3,3].join('_').gsub(".fna","")
-        Bio::FlatFile.auto(file).each do |gene|
-          name = gene.definition.split.first
-          protein = Bio::Sequence::NA.new(gene.seq).translate
-          out.puts protein.to_fasta(name)
-          database[source] << name
-        end
-      end
-
-      source = "R124"
-      Bio::FlatFile.auto("data/genome/annotation/genes.fna").each do |gene|
-        name = gene.definition.split.first
-        protein = Bio::Sequence::NA.new(gene.seq).translate
-        out.puts protein.to_fasta(name)
-        database[source] << name
-      end
-
-    end
-    File.open("data/orthologs/key.yml","w") do |out|
-      out.print YAML.dump(database)
-    end
-  end
+  task :all => [:tmp,'fasta:genes',:hmmer,:network,:cluster,:parse]
 
   task :hmmer => [:env] do
     Dir.chdir(@tmp) do
@@ -184,6 +154,36 @@ namespace :fasta do
   task :scaffold => [:env,:tmp] do
     Dir.chdir('data/genome/assembly') do
       `scaffolder sequence genome.scaffold.yml draft.fna --definition="fluorescens_r124_genome" > #{@tmp}/#{@genome}`
+    end
+  end
+
+  task :database => [:env] do
+    require 'bio'
+    database = Hash.new{|h,k| h[k] = [] }
+
+    File.open(File.join(@tmp,"genes.faa"),"w") do |out|
+
+      Dir['data/reference/gene/**/*.fna'].each do |file|
+      source = file.split('/')[-3,3].join('_').gsub(".fna","")
+        Bio::FlatFile.auto(file).each do |gene|
+          name = gene.definition.split.first
+          protein = Bio::Sequence::NA.new(gene.seq).translate
+          out.puts protein.to_fasta(name)
+          database[source] << name
+        end
+      end
+
+      source = "R124"
+      Bio::FlatFile.auto("data/genome/annotation/genes.fna").each do |gene|
+        name = gene.definition.split.first
+        protein = Bio::Sequence::NA.new(gene.seq).translate
+        out.puts protein.to_fasta(name)
+        database[source] << name
+      end
+
+    end
+    File.open(File.join(@tmp,"key.yml"),"w") do |out|
+      out.print YAML.dump(database)
     end
   end
 
