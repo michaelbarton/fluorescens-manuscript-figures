@@ -1,5 +1,7 @@
 task :env do
   require 'pp'
+  require 'set'
+  require 'bio'
 
   @tmp    = "tmp"
   @genome =  "fluorescens_r124_genome.fna"
@@ -128,6 +130,56 @@ namespace :orthologs do
       out.puts YAML.dump(species_clusters)
     end
 
+  end
+
+end
+
+namespace :pili do
+
+  task :all => [:tmp,'fasta:genes']
+
+  task :search => :env do
+    search  = Set.new # List of gene IDs to search
+    expired = Set.new # Already searched genes
+
+    results = Array.new
+
+    # Seed search set with initial data
+    search += YAML.load(File.read('data/pili/plasmid_pili_gene_ids.yml'))
+
+    until(search.empty?) do
+      puts "Searching #{format("%3d",search.size)} genes"
+      hits = phmmer(search)
+
+      results += hits
+
+      expired |= search
+      search.clear
+      search  |= (hits.map{|hit| hit[:match]} - expired.to_a)
+    end
+    File.open('data/pili/adjacency.csv','w') do |out|
+      out.puts %w|query match score| * ','
+      results.sort_by{|row| [row[:query],row[:match]]}.each do |row|
+        out.puts [row[:query],row[:match],row[:score]] * ','
+      end
+    end
+  end
+
+  def phmmer(ids)
+    File.open('tmp/query.faa','w'){|out| out.puts sequences(ids) }
+    Dir.chdir("tmp") do
+      `phmmer --noali --cpu 7 -E #{1e-10} --tblout hits.tab query.faa genes.faa > /dev/null`
+    end
+    File.open('tmp/hits.tab').reject{|line| line[0,1] == '#' }.map do |line|
+      entries = line.split
+      {:match => entries[0], :query => entries[2], :score => entries[4]}
+    end
+  end
+
+  def sequences(ids)
+    Bio::FlatFile.auto("tmp/genes.faa").select do |entry|
+      ids.include? entry.definition.split.first
+    end
   end
 
 end
