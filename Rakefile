@@ -169,9 +169,21 @@ namespace :pili do
   task :plot_data => :env do
     names = YAML.load(File.read("data/pili/plasmid_pili_gene_ids.yml"))
     File.open('data/pili/plot_data.csv','w') do |out|
-      out.puts %w|gene,x,y,name| * ','
+      out.puts %w|gene,x,y,name,source| * ','
       FCSV.foreach("data/pili/scaling.csv",:headers => true) do |row|
-        row << (names[row[0]] || "")
+
+        # Label with pili gene name
+        row << (names['plasmid'][row[0]] || names['genome'][row[0]] || "")
+
+        # Label with source
+        if    names['plasmid'][row[0]]
+          row << 'plasmid'
+        elsif names['genome'][row[0]]
+          row << 'genome'
+        else
+          row << ''
+        end
+
         out.puts row
       end
     end

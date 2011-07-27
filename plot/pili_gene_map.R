@@ -4,12 +4,15 @@ library(RColorBrewer)
 
 p <- ggplot(
   read.csv("data/pili/plot_data.csv"),
-  aes(x=x,y=y,color=name))
+  aes(x=x,y=y,color=name,shape=source,size=source))
 
 p <- p + geom_point()
 
-p <- p + scale_x_continuous("Second Dimensional Scaling",limits=c(-10,10))
-p <- p + scale_y_continuous("First Dimensional Scaling",limits=c(-10,10))
-p <- p + scale_colour_manual("Genes",values =c("black",brewer.pal(9,"Set1")))
+#p <- p + scale_x_continuous("Second Dimensional Scaling",limits=c(-10,10))
+#p <- p + scale_y_continuous("First Dimensional Scaling",limits=c(-10,10))
+
+p <-  p + scale_colour_manual("Genes",values =c("black",brewer.pal(9,"Set1")))
+p <-  p + scale_shape_manual("R124",values=c(16,15,17))
+p <-  p + scale_size_manual(values =c(1.5,3,3),legend=FALSE)
 
 print(p)
