@@ -145,7 +145,7 @@ namespace :pili do
     results = Array.new
 
     # Seed search set with initial data
-    search += YAML.load(File.read('data/pili/plasmid_pili_gene_ids.yml'))
+    search += YAML.load(File.read('data/pili/plasmid_pili_gene_ids.yml')).keys
 
     until(search.empty?) do
       puts "Searching #{format("%3d",search.size)} genes"
