@@ -65,39 +65,41 @@ namespace :data do
     end
   end
 
-end
-
-namespace :orthologs do
-
-  desc "Calculate ortholog clusters"
-  task :all => [:tmp,'fasta:genes',:hmmer,:network,:cluster,:parse]
-
-  task :hmmer => [:env] do
+  desc "Calculate search data"
+  task :search => [:env,'fasta:genes'] do
     Dir.chdir(@tmp) do
-      `phmmer --noali --cpu 7 --tblout hits.tab genes.faa genes.faa > phmmer.txt`
+      `phmmer --noali --cpu 7 -E #{0.001} --tblout hits.tab genes.faa genes.faa > phmmer.txt`
     end
-  end
 
-  task :network => [:env] do
-    Dir.chdir(@tmp) do
-      File.open('network.csv','w') do |out|
-        File.open('hits.tab','r').each do |line|
-          next if line[0,1] == '#'
-          tokens = line.split
+    hits = Hash.new{|h,k| h[k] = []}
+    File.open('tmp/hits.tab').reject{|i| i[0,1] == '#'}.map do |i|
+      entries = i.split
+      match, query, score = entries[0], entries[2], entries[4].to_f
 
-          a,b = tokens[0],tokens[2]
-          next if a == b
-          next if tokens[4].to_f > 1e-3 # Test for homology using e-value
+      hits[query] << {:match => match, :score => score}
+    end
 
-          out.puts [a,b].join(' ')
+    delim = "\t"
+    File.open('data/search.tab','w') do |out|
+      out.puts %w|query match score| * delim
+      hits.keys.sort.each do |query|
+        hits[query].sort_by{|i| i[:score]}.each do |hit|
+          out.puts [query, hit[:match], hit[:score]] * delim
         end
       end
     end
   end
 
+end
+
+namespace :orthologs do
+
+  desc "Calculate ortholog clusters"
+  task :all => [:tmp,'data:search',:cluster,:parse]
+
   task :cluster => [:env] do
     Dir.chdir(@tmp) do
-      `mcxload -abc network.csv -o graph.txt -write-tab labels.txt`
+      `mcxload -abc ../data/search.tab -o graph.txt -write-tab labels.txt`
       `mcl graph.txt -o clusters.txt -use-tab labels.txt --force-connected=y`
       `clmformat -icl clusters.txt -imx graph.txt -dir . -dump cluster-scores.txt --dump-measures`
       FileUtils.cp "clusters.txt","../data/orthologs/"
@@ -186,17 +188,6 @@ namespace :pili do
 
         out.puts row
       end
-    end
-  end
-
-  def phmmer(ids)
-    File.open('tmp/query.faa','w'){|out| out.puts sequences(ids) }
-    Dir.chdir("tmp") do
-      `phmmer --noali --cpu 7 -E #{1e-10} --tblout hits.tab query.faa genes.faa > /dev/null`
-    end
-    File.open('tmp/hits.tab').reject{|line| line[0,1] == '#' }.map do |line|
-      entries = line.split
-      {:match => entries[0], :query => entries[2], :score => entries[4]}
     end
   end
 

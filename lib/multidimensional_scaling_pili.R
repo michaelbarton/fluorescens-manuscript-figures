@@ -40,7 +40,7 @@ generate.MDS <- function(score.matrix){
   s
 }
 
-adjacency <- read.csv("data/pili/adjacency.csv")
+adjacency <- read.csv("data/search.tab",sep = "\t")
 adjacency$score <- log.score(adjacency$score)
 
 write.csv(file="data/pili/scaling.csv",
