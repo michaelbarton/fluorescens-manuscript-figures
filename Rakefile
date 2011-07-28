@@ -242,7 +242,7 @@ namespace :fasta do
       Dir['data/reference/gene/**/*.fna'].each do |file|
       source = file.split('/')[-3,3].join('_').gsub(".fna","")
         Bio::FlatFile.auto(file).each do |gene|
-          name = gene.definition.split.first
+          name = genebank_id(gene.definition.split.first)
           protein = Bio::Sequence::NA.new(gene.seq).translate
           out.puts protein.to_fasta(name)
           database[source] << name
@@ -261,6 +261,11 @@ namespace :fasta do
     File.open(File.join(@tmp,"key.yml"),"w") do |out|
       out.print YAML.dump(database)
     end
+  end
+
+  def genebank_id(string)
+    string =~ /([^_]+)\.\d$/
+    Regexp.last_match(1)
   end
 
 end
