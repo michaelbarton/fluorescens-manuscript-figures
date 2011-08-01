@@ -108,7 +108,7 @@ namespace :orthologs do
 
   task :parse => [:env] do
     clusters = File.open(@tmp + '/clusters.txt').map{ |line| line.split }
-    species = YAML.load(File.read('data/orthologs/key.yml'))
+    species = YAML.load(File.read('data/species.yml'))
 
     (species.values.flatten - clusters.flatten).each do |id|
       clusters << [id]
@@ -249,7 +249,7 @@ namespace :fasta do
       end
 
     end
-    File.open(File.join(@tmp,"key.yml"),"w") do |out|
+    File.open(File.join("data/species.yml"),"w") do |out|
       out.print YAML.dump(database)
     end
   end
