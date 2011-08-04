@@ -209,8 +209,9 @@ namespace :pili do
   def database(&block)
     require 'rufus/tokyo'
     file = 'tmp/search.tct'
-    yield Rufus::Tokyo::Table.new(file)
-    t.close
+    db = Rufus::Tokyo::Table.new(file)
+    yield db
+    db.close
   end
 
 end
