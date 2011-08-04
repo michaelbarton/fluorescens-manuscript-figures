@@ -168,6 +168,15 @@ namespace :pili do
     end
   end
 
+  task :create_db => :env do
+    database do |db|
+      File.open('data/search.tab').each_with_index do |line,i|
+        query, match, score = line.split
+        db[i] = {:query => query, :match => match, :score => score.to_f}
+      end
+    end
+  end
+
   task :plot_data => :env do
     names = YAML.load(File.read("data/pili/plasmid_pili_gene_ids.yml"))
     File.open('data/pili/plot_data.csv','w') do |out|
@@ -195,6 +204,13 @@ namespace :pili do
     Bio::FlatFile.auto("tmp/genes.faa").select do |entry|
       ids.include? entry.definition.split.first
     end
+  end
+
+  def database(&block)
+    require 'rufus/tokyo'
+    file = 'tmp/search.tct'
+    yield Rufus::Tokyo::Table.new(file)
+    t.close
   end
 
 end
