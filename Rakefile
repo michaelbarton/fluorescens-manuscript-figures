@@ -65,7 +65,7 @@ namespace :data do
     end
   end
 
-  desc "Calculate search data"
+  desc "Perform all-to-all hmmer gene search"
   task :search => [:env,'fasta:database'] do
     Dir.chdir(@tmp) do
       `phmmer --noali --cpu 7 -E #{0.001} --tblout hits.tab genes.faa genes.faa > phmmer.txt`
