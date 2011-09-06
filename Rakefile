@@ -16,7 +16,7 @@ namespace :data do
   desc "Align genomes to the scaffold"
   task :synteny => [:env,:tmp,'fasta:all'] do
     Dir.chdir(@tmp) do
-      pids = Dir['*_*.fna'].map do |r|
+      pids = (Dir['*.fna'] - [@genome]).map do |r|
         ref = r.gsub('.fna','')
         pid = fork{
         `nucmer --prefix=#{ref} --maxmatch #{ref}.fna #{@genome} 2> /dev/null`
