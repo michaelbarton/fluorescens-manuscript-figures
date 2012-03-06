@@ -24,7 +24,7 @@ data <- ddply(data,.(reference),function(df){
 
 data$reference <- as.factor(find.replace(data$reference,
   c("fluorescens_pf01_genome","fluorescens_pf5_genome","fluorescens_sbw25_genome"),
-  c("Pf-01","Pf-5","SBW-25")
+  c("Pf0-1","Pf-5","SBW-25")
   ))
 
 base <- ggplot(data,aes(color=reference)) + theme_bw()
