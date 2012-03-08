@@ -30,7 +30,7 @@ p <- p + geom_text(aes(
     y      = 4500,
     vjust  = 0,
     hjust  = 0,
-    label  = paste("η= ",signif(median_density,digits=3),"Genes/KBp")),
+    label  = paste("median =",signif(median_density,digits=3),"Genes/KBp")),
   colour = "grey30")
 
 # Plot size data
@@ -49,6 +49,6 @@ p <- p + scale_y_continuous("Gene Count")
 p <- p + scale_x_continuous("Genome Size (KBp)")
 p <- p + theme_bw()
 
-png('out/genome_size_vs_annotations.png',width=600)
+postscript('out/genome_size_vs_annotations.eps',width=600)
 print(p)
 graphics.off()
