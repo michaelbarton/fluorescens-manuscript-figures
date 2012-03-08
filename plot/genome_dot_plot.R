@@ -60,7 +60,7 @@ vplayout <- function(...) {
 
 subplot <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
 
-png("out/genome_dot_plot.png", width = 600, height = 600)
+postscript("out/genome_dot_plot.eps", width = 600)
 
 vplayout()
 print(p1,     vp = subplot(1, 1))
