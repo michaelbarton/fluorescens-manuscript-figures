@@ -1,5 +1,9 @@
+gene_density.eps: bin/plot_gene_density gene_count.csv
+	$^ $@
+
 gene_count.csv: bin/count genomes/.decompressed
-	ls $(dir $(lastword $^))**/**/genome.gb | parallel $< > $@
+	echo "species,strain,genome_size,gene_count" > $@
+	ls $(dir $(lastword $^))**/**/genome.gb | parallel $< >> $@
 
 genomes/.decompressed: genomes.tar.xz
 	xz --force --keep --decompress $<
