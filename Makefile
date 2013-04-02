@@ -1,3 +1,6 @@
+gene_count.csv: bin/count genomes/.decompressed
+	ls $(dir $(lastword $^))**/**/genome.gb | parallel $< > $@
+
 genomes/.decompressed: genomes.tar.xz
 	xz --force --keep --decompress $<
 	tar -xf $(basename $<)

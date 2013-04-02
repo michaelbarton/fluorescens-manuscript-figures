@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bio'
+
+file = ARGV.first
+entry = Bio::FlatFile.auto(file).first
+
+species, strain =  file.gsub('.gb','').split('/')[-3,2]
+genome_length = entry.seq.length
+
+count = 0
+entry.each_gene{ count += 1}
+
+puts [species,strain,genome_length,count].join(',')
+exit
