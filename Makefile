@@ -1,9 +1,9 @@
 all: gene_density.eps dotplot.eps growth.eps
 
-growth.eps: bin/plot_growth growth_data.csv
+growth.eps: plot/growth growth_data.csv
 	$^ $@
 
-dotplot.eps: bin/dotplot synteny.tab
+dotplot.eps: plot/dotplot synteny.tab
 	$^ $@
 
 synteny.tab: bin/align genomes/.fasta
@@ -18,7 +18,7 @@ genomes/.fasta: bin/fasta genomes/.decompressed
 	ls $(dir $(lastword $^))**/**/genome.gb | parallel $<
 	touch $@
 
-gene_density.eps: bin/plot_gene_density gene_count.csv
+gene_density.eps: plot/gene_density gene_count.csv
 	$^ $@
 
 gene_count.csv: bin/count genomes/.decompressed
@@ -35,4 +35,4 @@ genomes.tar.xz:
 	s3cmd get s3://com-cavescience-r124-manuscript/$@
 
 clean:
-	rm -rf genomes/ *.csv *.eps
+	rm -rf genomes/ *.csv *.eps *.tab
