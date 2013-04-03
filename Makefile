@@ -1,3 +1,13 @@
+#all: gene_density.eps dot_plot.eps
+
+synteny.tab: bin/align genomes/.fasta
+	ls $(dir $(lastword $^))**/**/genome.fna \
+		| grep "pf01\|sbw25\|pf5" \
+		| parallel $< genomes/fluorescens/r124/genome.fna {}
+	sleep 1
+	cat *.coords | sort > $@
+	rm *.coords *.delta
+
 genomes/.fasta: bin/fasta genomes/.decompressed
 	ls $(dir $(lastword $^))**/**/genome.gb | parallel $<
 	touch $@
