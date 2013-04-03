@@ -1,3 +1,7 @@
+genomes/.fasta: bin/fasta genomes/.decompressed
+	ls $(dir $(lastword $^))**/**/genome.gb | parallel $<
+	touch $@
+
 gene_density.eps: bin/plot_gene_density gene_count.csv
 	$^ $@
 
