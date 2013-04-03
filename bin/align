@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+query, reference = ARGV
+
+ref =  reference.gsub('.fna','').split('/')[-3,2].join('_')
+
+`nucmer --prefix=#{ref} --maxmatch #{reference} #{query} 2> /dev/null`
+`show-coords -THr #{ref}.delta > #{ref}.coords`

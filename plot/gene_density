@@ -1,0 +1,54 @@
+#!/usr/bin/env Rscript
+
+library(plyr)
+library(ggplot2)
+
+in_file  <- commandArgs(trailing = TRUE)[1]
+out_file <- commandArgs(trailing = TRUE)[2]
+
+data <- read.csv(in_file)
+data$genome_size <- data$genome_size/1000
+
+median_density <- with(subset(data,strain != "r124"),{
+  median(gene_count / genome_size)
+})
+
+p <- ggplot(data,aes(y=gene_count,x=genome_size,colour=species))
+
+# Add slope line
+p <- p + geom_abline(
+  intercept = 0,
+  slope     = median_density,
+  lty       = 2,
+  color     = "grey30",
+  size      = 1
+  )
+
+# Annotate with median gene density
+p <- p + geom_text(aes(
+    x      = 5200,
+    y      = 4500,
+    vjust  = 0,
+    hjust  = 0,
+    label  = paste("median =",signif(median_density,digits=3),"Genes/KBp")),
+  colour = "grey30")
+
+# Plot size data
+p <- p + geom_point(size=10)
+
+# Highlight R124 genome
+p <- p + geom_text(aes(
+    x      = 6221,
+    y      = 5200,
+    vjust  = 1.5,
+    hjust  = -0.5,
+    label  = "R124"),
+  colour = "grey30")
+
+p <- p + scale_y_continuous("Gene Count")
+p <- p + scale_x_continuous("Genome Size (KBp)")
+p <- p + theme_bw()
+
+postscript(out_file,width=600)
+print(p)
+graphics.off()

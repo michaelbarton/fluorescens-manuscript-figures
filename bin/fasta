@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bio'
+
+in_file  = ARGV.first
+out_file = in_file.gsub(".gb",".fna")
+
+species, strain =  in_file.gsub('.gb','').split('/')[-3,2]
+
+File.open(out_file,'w') do |out|
+  dna = Bio::FlatFile.auto(in_file).first.to_biosequence
+  out.print dna.output(:fasta,:header => strain)
+end
+
+exit

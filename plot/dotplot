@@ -1,0 +1,83 @@
+#!/usr/bin/env Rscript
+
+library('plyr')
+library('grid')
+library('ggplot2')
+
+find.replace <- function(vector,find,replace.with){
+  if(length(find) == length(replace.with)){
+    for(i in 1:length(find)){
+      vector[vector == find[i]] <- replace.with[i]
+    }
+  } else {
+    stop("Find and replace vectors should be same length")
+  }
+  vector
+}
+
+options(stringsAsFactors = FALSE)
+
+in.file <- commandArgs(trailing = TRUE)[1]
+out.file <- commandArgs(trailing = TRUE)[2]
+
+data <- read.csv(in.file,sep="\t",header = FALSE)
+names(data)[length(names(data)) - 1] <- "reference"
+names(data)[length(names(data))]     <- "assembly"
+
+# Select only those matches with at least 10 hits
+data <- ddply(data,.(reference),function(df){
+  if(dim(df)[1] > 10){
+    return(df)
+  }
+})
+
+
+data$reference <- as.factor(find.replace(data$reference,
+  c("pf01","pf5","sbw25"),
+  c("Pf0-1","Pf-5","SBW-25")
+  ))
+
+base <- ggplot(data) + theme_bw()
+
+p1 <- base + geom_segment(aes(y = V1/1000000, yend = V2/1000000,
+  x = V3/1000000, xend = V4/1000000,color=reference),size = 6)
+p1 <- p1 + scale_y_continuous("P. fluorescens Reference Genome Position (MBp)")
+p1 <- p1 + xlab(NULL)
+p1 <- p1 + geom_text(aes(x,y,label = text),
+                     data.frame(x=0.25, y=7, text="A"))
+p1 <- p1 + theme(legend.position="top")
+p1 <- p1 + scale_color_discrete(name = "Reference Genome:")
+
+p2 <- base + geom_density(size = 1, adjust = 1/3, aes(x = (V4 + V3)/2000000,color=reference))
+p2 <- p2 + scale_x_continuous("P. fluorescens R124 Genome Position (MBp)")
+p2 <- p2 + scale_y_continuous("Sequence Alignment Density",breaks = c(0))
+p2 <- p2 + geom_text(aes(x,y,label = text),
+                     data.frame(x=0.25, y=0.25, text="B"))
+p2 <- p2 + theme(legend.position="none")
+
+#legend <- p2 + opts(keep = "legend_box")
+#p1 <- p1 + opts(legend.position = "none")
+#p2 <- p2 + opts(legend.position = "none")
+
+Layout <- grid.layout(
+  nrow    = 2,
+  ncol    = 2,
+  widths  = unit(c(2, 0.4), c("null", "null")),
+  heights = unit(c(5, 2),   c("null", "null"))
+)
+
+vplayout <- function(...) {
+  grid.newpage()
+  pushViewport(viewport(layout = Layout))
+}
+
+subplot <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+postscript(out.file, width = 600)
+
+vplayout()
+print(p1,     vp = subplot(1, 1))
+print(p2,     vp = subplot(2, 1))
+#print(legend, vp = subplot(1:2, 2))
+
+graphics.off()
