@@ -1,4 +1,7 @@
-#all: gene_density.eps dot_plot.eps
+all: gene_density.eps dotplot.eps
+
+dotplot.eps: bin/dotplot synteny.tab
+	$^ $@
 
 synteny.tab: bin/align genomes/.fasta
 	ls $(dir $(lastword $^))**/**/genome.fna \
