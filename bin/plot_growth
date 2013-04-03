@@ -1,0 +1,29 @@
+#!/usr/bin/env Rscript
+library(reshape)
+library(plyr)
+library(ggplot2)
+
+in.file  <- commandArgs(trailing=T)[1]
+out.file <- commandArgs(trailing=T)[2]
+
+data      <- read.csv(in.file)
+data      <- subset(data,time != 24)
+data      <- subset(data,ignore != T)
+
+response <- cast(
+              melt(data,measure.var='od'),
+              nutrient + strain + concentration ~ time + .,
+              mean)
+
+final_growth <- ddply(response,.(nutrient,strain,concentration),function(x){ x[10] })
+names(final_growth)[4] <- "growth_at_12_hrs"
+
+p <- ggplot(final_growth,aes(x=log10(1+concentration), y=growth_at_12_hrs, col=strain))
+p <- p + geom_line()
+p <- p + facet_grid(nutrient ~ .)
+p <- p + theme_bw()
+p <- p + scale_x_continuous('log10(1 + mM Concentration)')
+p <- p + scale_y_continuous('Optical Density after 12 hours')
+
+postscript(out.file,width=5)
+print(p)

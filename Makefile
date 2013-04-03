@@ -1,4 +1,7 @@
-all: gene_density.eps dotplot.eps
+all: gene_density.eps dotplot.eps growth.eps
+
+growth.eps: bin/plot_growth growth_data.csv
+	$^ $@
 
 dotplot.eps: bin/dotplot synteny.tab
 	$^ $@
