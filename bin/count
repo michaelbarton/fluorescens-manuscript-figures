@@ -7,7 +7,7 @@ file = ARGV.first
 entry = Bio::FlatFile.auto(file).first
 
 species, strain =  file.gsub('.gb','').split('/')[-3,2]
-genome_length = entry.seq.length
+genome_length = entry.seq.gsub(/[Nn]+/,'').length
 
 count = 0
 entry.each_gene{ count += 1}

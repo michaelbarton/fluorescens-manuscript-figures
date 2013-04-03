@@ -13,3 +13,6 @@ genomes/.decompressed: genomes.tar.xz
 
 genomes.tar.xz:
 	s3cmd get s3://com-cavescience-r124-manuscript/$@
+
+clean:
+	rm -rf genomes/ *.csv *.eps

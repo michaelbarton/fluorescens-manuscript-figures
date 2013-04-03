@@ -38,8 +38,8 @@ p <- p + geom_point(size=10)
 
 # Highlight R124 genome
 p <- p + geom_text(aes(
-    x      = 6250,
-    y      = 5600,
+    x      = 6221,
+    y      = 5200,
     vjust  = 1.5,
     hjust  = -0.5,
     label  = "R124"),
