@@ -19,7 +19,7 @@ final_growth <- ddply(response,.(nutrient,strain,concentration),function(x){ x[1
 names(final_growth)[4] <- "growth_at_12_hrs"
 
 p <- ggplot(final_growth,aes(x=log10(1+concentration), y=growth_at_12_hrs, col=strain))
-p <- p + geom_line()
+p <- p + geom_point()
 p <- p + facet_grid(nutrient ~ .)
 p <- p + theme_bw()
 p <- p + scale_x_continuous('log10(1 + mM Concentration)')
