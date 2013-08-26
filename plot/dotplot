@@ -54,6 +54,8 @@ p2 <- p2 + scale_y_continuous("Sequence Alignment Density",breaks = c(0))
 p2 <- p2 + geom_text(aes(x,y,label = text),
                      data.frame(x=0.25, y=0.25, text="B"))
 p2 <- p2 + theme(legend.position="none")
+p2 <- p2 + theme(axis.title.x = element_text(vjust = -0.75))
+
 
 #legend <- p2 + opts(keep = "legend_box")
 #p1 <- p1 + opts(legend.position = "none")
